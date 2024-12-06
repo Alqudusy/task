@@ -25,20 +25,20 @@ const App = () => {
   }, []);
   return (
     <>
-      {user ? (
+      {!user ? (
+        <>
+          <Form />
+        </>
+      ) : (
         <>
           <NavBar />
           <TaskItem />
           <Footer />
         </>
-      ) : (
-        <>
-          <Form />
-        </>
       )}
       <Notification />
     </>
-  )
+  );
 }
 
 export default App
