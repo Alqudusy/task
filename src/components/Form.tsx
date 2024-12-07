@@ -16,7 +16,7 @@ const Form = () => {
             {isUserSignedUp ? (
                 <LogIn onAuthSuccess={handleAuthSuccess} />
             ) : (
-                <SignUp onAuthSuccess={handleAuthSuccess} />
+                <SignUp />
             )}
             <p className="text-center mt-5">
                 {isUserSignedUp ? 'Don\'t have an account?' : 'Already have an account?'}{' '}

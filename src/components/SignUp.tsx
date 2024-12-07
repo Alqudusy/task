@@ -1,62 +1,59 @@
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import React, { useState } from "react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
-import { auth } from "./firebase-config";
-
-const SignUp = ({ onAuthSuccess }: { onAuthSuccess: () => void }) => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [displayName, setDisplayName] = useState("");
-
-    const handleSubmit = async (e: React.FormEvent) => {
+import 'react-toastify/dist/ReactToastify.css';
+import { auth, db } from './firebase-config.ts';
+const SignUp = () => {
+    const handleSignUp = async (e: React.ChangeEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (password !== confirmPassword) {
-            toast.error("password mismatch");
-            return;
-        }
+        const formData = new FormData(e.target);
+        const { name, email, password } = Object.fromEntries(formData) as {
+            name: string;
+            email: string;
+            password: string;
+        };
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            // Update the user's display name
-            if (displayName) {
-                await updateProfile(user, { displayName });
-            }
-
-            onAuthSuccess(); // Notify parent of successful signup
-            toast.success("Signed up successfully")
+            const res = await createUserWithEmailAndPassword(auth, email, password);
+            console.log(res);
+            // Save user data in Firestore with UID
+            await setDoc(doc(db, "users", res.user.uid), {
+                name: name,
+                email: email,
+                createdAt: new Date().toISOString(),
+                tasks: [],
+            });
+            toast.success("Account Created Successfully");
         } catch (err: any) {
-            console.log(err);
-            toast.error(err.message)
+            console.error(err);
+            toast.error(err.message);
         }
     };
-
     return (
-        <div className="container mt-5">
-            <h2 className="text-center">Sign Up</h2>
-            <form className="mt-4" onSubmit={handleSubmit}>
+        <div className="sign-up container my-5">
+            <h1 className="text-center mb-4">Welcome to Task Management Webapp</h1>
+            <form
+                className="mx-auto p-4 border rounded shadow-sm"
+                style={{ maxWidth: "400px" }}
+                onSubmit={handleSignUp}
+            >
                 <div className="mb-3">
-                    <label htmlFor="displayName" className="form-label">Full Name</label>
+                    <label htmlFor="name" className="form-label">Full Name</label>
                     <input
                         type="text"
+                        name="name"
+                        id="name"
                         className="form-control"
-                        id="displayName"
-                        value={displayName}
                         placeholder="Enter your full name"
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        required
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="email" className="form-label">Email</label>
+                    <label htmlFor="email" className="form-label">Email Address</label>
                     <input
                         type="email"
-                        className="form-control"
+                        name="email"
                         id="email"
-                        value={email}
+                        className="form-control"
                         placeholder="Enter your email"
-                        onChange={(e) => setEmail(e.target.value)}
                         required
                     />
                 </div>
@@ -64,30 +61,31 @@ const SignUp = ({ onAuthSuccess }: { onAuthSuccess: () => void }) => {
                     <label htmlFor="password" className="form-label">Password</label>
                     <input
                         type="password"
-                        className="form-control"
+                        name="password"
                         id="password"
-                        value={password}
+                        className="form-control"
                         placeholder="Enter your password"
-                        onChange={(e) => setPassword(e.target.value)}
                         required
                     />
                 </div>
-                <div className="mb-3">
-                    <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+                <div className="form-check mb-3">
                     <input
-                        type="password"
-                        className="form-control"
-                        id="confirmPassword"
-                        value={confirmPassword}
-                        placeholder="Confirm your password"
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        type="checkbox"
+                        name="agree"
+                        id="agree"
+                        className="form-check-input"
                         required
                     />
+                    <label htmlFor="agree" className="form-check-label">
+                        By signing up, you agree to our{" "}
+                        <a href="#" className="text-decoration-underline">
+                            Terms and Conditions
+                        </a>.
+                    </label>
                 </div>
                 <button type="submit" className="btn btn-primary w-100">Sign Up</button>
             </form>
         </div>
     );
 };
-
 export default SignUp;
